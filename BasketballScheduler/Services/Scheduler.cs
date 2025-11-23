@@ -16,38 +16,48 @@ namespace BasketballScheduler.Services
                 throw new ArgumentNullException("Teams are required", nameof(teams));
             if (slots == null || slots.Count ==0)
                 throw new ArgumentNullException("Time slots are required", nameof(slots));
-            // sort teams by grade
-            var sortedTeams = teams.OrderBy(t => t.Grade).ToList(); 
+            
+            // group teams by grade
+            var groups = teams.GroupBy(t => t.Grade).OrderBy(g => g.Key); 
 
-            // pairing logic: pair teams sequentially
-            var pairs = new List<(Team Home, Team Away)>();
-            for (int i = 0; i < sortedTeams.Count; i += 2)
+            // pairing logic
+            var pairs = new List<(Team, Team)>();
+            var byeTeams = new List<Team>();
+
+            foreach (var group in groups)
             {
-                pairs.Add((sortedTeams[i], sortedTeams[i + 1]));
-            }
-            //handle odd amount of teams
-            Team? byeTeam = null;
-            if (sortedTeams.Count % 2 != 0)
-            {
-                byeTeam = sortedTeams.Last();
+                var gradeTeams = group.ToList();
+                //pair teams within grade 
+                for (int i = 0; i < gradeTeams.Count - 1; i += 2)
+                {
+                    pairs.Add((gradeTeams[i], gradeTeams[i + 1]));
+                }
+                //handle odd team in grade
+                if (gradeTeams.Count % 2 != 0)
+                {
+                    byeTeams.Add(gradeTeams.Last());
+                }
             }
 
             //ensure enough slots
             if (pairs.Count > slots.Count)
                 throw new InvalidOperationException("Not enough time slots for all games.");
-            // index aligned mapping
+            // index aligned mapping; alternate home and away teams
             var games = new List<Game>(pairs.Count);
             for (int i = 0; i < pairs.Count; i++)
             {
                 var slot = slots[i];
-                var (home, away) = pairs[i];
-                games.Add(new Game(home, away, slot));
+                var (teamA, teamB) = pairs[i];
+                if (i % 2 == 0)
+                    games.Add(new Game(teamA, teamB, slot));
+                else
+                    games.Add(new Game(teamB, teamA, slot));
             }
 
             //bye team console output
-            if (byeTeam != null)
+            foreach (var team in byeTeams)
             {
-                Console.WriteLine($"Team with bye due to odd number of teams: {byeTeam.Name} (Grade {byeTeam.Grade})");
+                Console.WriteLine($"Team {team.Name} has a bye this round because there is no same grade opponent.");
             }
 
             return games;

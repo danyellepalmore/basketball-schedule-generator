@@ -1,16 +1,33 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using BasketballScheduler.Config;
+﻿using BasketballScheduler.Config;
 using BasketballScheduler.Services;
 using BasketballScheduler.Models;
 
 var teams = new List<Team>
 {
     new Team("Hawks", 4), new Team("Falcons", 4),
-    new Team("Cougars", 5), new Team("Lions", 5),
-    new Team("Eagles", 7), new Team("Bears", 8),
+    new Team("Hawks", 5), new Team("Lions", 5),  //fix: duplicate name for different grade should be okay
+    new Team("Eagles", 8), new Team("Bears", 8),
     new Team("Wolves", 11), new Team("Tigers", 11)
 };
+
+//validation method (could be moved to a service later)
+static void ValidateTeams(List<Team> teams)
+{
+    if (teams == null || teams.Count == 0)
+        throw new ArgumentNullException("Teams list cannot be null or empty.", nameof(teams));
+    //track name and grade
+    var nameSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    foreach (var t in teams)
+    {
+        //check name & grade combination
+        var key = $"{t.Name}|{t.Grade}";
+        if (!nameSet.Add(key))
+            throw new ArgumentException($"Duplicate team found: {t.Name} in grade {t.Grade}");
+        //check grade range
+        if (t.Grade < 1 || t.Grade > 12)
+            throw new ArgumentOutOfRangeException($"Team {t.Name} has invalid grade: {t.Grade}");
+    }
+}
 
 var config = new SchedulerConfig
 {
@@ -22,11 +39,12 @@ var config = new SchedulerConfig
 };
 
 // validate
+ValidateTeams(teams);
 config.Validate();
-
+// generate time slots
 var slotService = new TimeSlotService();
 var slots = slotService.GenerateSlots(config);
-
+//schdeule games
 var scheduler = new Scheduler();
 var games = scheduler.CreateSchedule(teams, slots);
 

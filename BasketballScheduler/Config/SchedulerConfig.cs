@@ -1,4 +1,3 @@
-//Time Complexity: O(S x C) ; Linear Time |
 using System;
 //<summary>
 //Configuration for scheduling constraints and environment | Centralizes environment to prevent hardcoding values. 
@@ -16,5 +15,22 @@ namespace BasketballScheduler.Config
         //full date time
         public DateTime GetStartDateTime() => Day.Date + StartTime;
         public DateTime GetEndDateTime() => Day.Date + EndTime;
+
+        //validation
+        public void Validate()
+        {
+            if (SlotMinutes <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(SlotMinutes), "SlotMinutes must be a positive integer.");
+            }
+            if (CourtCount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(CourtCount), "CourtCount must be a positive integer.");
+            }
+            if (EndTime <= StartTime)
+            {
+                throw new ArgumentException("EndTime must be later than StartTime.");
+            }
+        }
     }
 }

@@ -6,15 +6,25 @@ using BasketballScheduler.Services;
 var config = new SchedulerConfig
 {
     Day = DateTime.Today,
-    StartTime = new TimeSpan(9, 0, 0),
-    EndTime = new TimeSpan(12, 0, 0),
-    SlotMinutes = 60,
-    CourtCount = 2
+    StartTime = new TimeSpan(9, 0, 0),   // 9:00 AM
+    EndTime = new TimeSpan(12, 0, 0),    // 12:00 PM
+    SlotMinutes = 60,                    // 1 hour slots
+    CourtCount = 2                       // 2 courts
 };
 
+// validate
+config.Validate();
+
+// generate slots using Service
 var service = new TimeSlotService();
 var slots = service.GenerateSlots(config);
-foreach (var s in slots) Console.WriteLine(s);
+
+Console.WriteLine("Generated schedule:");
+foreach (var slot in slots)
+{
+    Console.WriteLine(slot);
+}
+
 
 
 //instantiate classes test
